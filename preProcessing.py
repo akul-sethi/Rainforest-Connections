@@ -47,3 +47,6 @@ def prepare_labels():
 
 prepare_spec_dataset(22050, 2048, 512)
 prepare_labels()
+
+# 1 hour to process all data
+# 4.44 GB for all data
