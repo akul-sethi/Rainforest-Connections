@@ -27,6 +27,7 @@ def prepare_spec_dataset(sr, n_fft, hop_length):
         signal, sr = lb.load(os.path.join(TRAIN_PATH, row) + '.flac', sr=sr)
         s = create_spectogram(signal, n_fft, hop_length)
         data.append(s)
+        print("Samples converted: " + str(len(data)))
 
     with open('train_tp_specs.npy', 'wb') as f:
         np.save(f, np.stack(data, axis=0))
@@ -35,18 +36,20 @@ def prepare_spec_dataset(sr, n_fft, hop_length):
 def prepare_labels():
     labels = []
 
-    for row in train_tp['species_id']:
-        v = [0 for i in range(24)]
-        v[row] = 1
-        labels.append(v)
+    for species in train_tp['species_id']:
+        labels.append(species)
+        print("Labels converted: " + str(len(labels)))
+
     with open('train_tp_labels.npy', 'wb') as f:
-        np.save(f, np.stack(labels, axis=0))
+        np.save(f, labels)
 
 
 # recording_id,species_id,songtype_id,t_min,f_min,t_max,f_max
 
-prepare_spec_dataset(22050, 2048, 512)
+# prepare_spec_dataset(22050, 2048, 512)
+# print("Done with Spectograms")
 prepare_labels()
+print("Done with everything")
 
 # 1 hour to process all data
 # 4.44 GB for all data
