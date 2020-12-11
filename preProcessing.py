@@ -52,4 +52,4 @@ prepare_labels()
 print("Done with everything")
 
 # 1 hour to process all data
-# 4.44 GB for all data
+# 12.44 GB for all data
