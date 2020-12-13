@@ -2,7 +2,8 @@
 import numpy as np  # linear algebra
 import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
 import librosa as lb
-import json
+from tqdm import tqdm
+from skimage.transform import resize
 import librosa.display
 import matplotlib.pyplot as plt
 import os
@@ -45,11 +46,41 @@ def prepare_labels():
 
 
 # recording_id,species_id,songtype_id,t_min,f_min,t_max,f_max
+# Minimum frequency is 93.75
+# Maximum frequency is 13687.5
+# Duration of largest sample is 7.923900000000003
 
-# prepare_spec_dataset(22050, 2048, 512)
-# print("Done with Spectograms")
-prepare_labels()
-print("Done with everything")
+
+def prep_mel_specs(sr, n_fft, hop_length):
+    min_fr = 93.75 * 0.9
+    max_fr = 13687.5 * 1.1
+    sr = sr
+    duration = 10 * sr
+    for index, row in tqdm(train_tp.iterrows()):
+        signal, sr = lb.load(os.path.join(TRAIN_PATH, row['recording_id']) + '.flac', sr=None)
+
+        t_min = round(row['t_min'] * sr)
+        t_max = round(row['t_max'] * sr)
+
+        length = int(t_max - t_min)
+        beginning = t_min - (duration - length) / 2
+        if beginning < 0:
+            beginning = 0
+
+        end = beginning + duration
+        if end > signal.shape[0]:
+            end = signal.shape[0]
+
+        sound_slice = signal[int(beginning):int(end)]
+
+        mel_spec = lb.feature.melspectrogram(sound_slice, sr=sr, n_fft=n_fft, hop_length=hop_length,
+                                             fmin=min_fr, fmax=max_fr, power=1.5)
+        mel_spec = resize(mel_spec, (128, 500))
+        mel_spec = np.reshape(mel_spec, (mel_spec.shape[0], mel_spec.shape[1], 1))
+        np.save(row['recording_id'] + '_' + row['species_id'], mel_spec)
+
+
+prep_mel_specs(48000, 2048, 512)
 
 # 1 hour to process all data
 # 12.44 GB for all data
