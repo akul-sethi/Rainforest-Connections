@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import os
 
 TRAIN_PATH = "rfcx-species-audio-detection/train/"
+TEST_DATA_PATH = 'rfcx-species-audio-detection/test'
 
 train_tp = pd.read_csv("rfcx-species-audio-detection/train_tp.csv", delimiter=',')
 train_fp = pd.read_csv("rfcx-species-audio-detection/train_fp.csv", delimiter=',')
@@ -80,7 +81,31 @@ def prep_mel_specs(sr, n_fft, hop_length):
         np.save(row['recording_id'] + '_' + row['species_id'], mel_spec)
 
 
-prep_mel_specs(48000, 2048, 512)
+def prep_test_specs(sample_length, stride):
+    n_fft = 2048
+    hop_length = 512
+    min_fr = 93.75 * 0.9
+    max_fr = 13687.5 * 1.1
+    root, dirnames, filenames = next(iter(os.walk(TEST_DATA_PATH)))
+    for file in filenames:
+        spec_batch = []
+        signal, sr = lb.load(os.path.join(TEST_DATA_PATH, file), sr=None)
+        start = 0
+        end = int(sample_length * sr)
+        while end <= signal.shape[0]:
+            signal_bite = signal[start:end]
+            new_spec = lb.feature.melspectrogram(signal_bite, sr=sr, n_fft=n_fft, hop_length=hop_length,
+                                                 fmin=min_fr, fmax=max_fr, power=1.5)
+            new_spec = resize(new_spec, (128, 500))
+            new_spec = np.reshape(new_spec, (new_spec.shape[0], new_spec.shape[1], 1))
+            spec_batch.append(new_spec)
+
+            start += int(stride * sr)
+            end = int(start + sample_length * sr)
+        np.save(file, np.stack(spec_batch))
+
+
+prep_test_specs(10,10)
 
 # 1 hour to process all data
 # 12.44 GB for all data
