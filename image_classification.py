@@ -12,8 +12,8 @@ import math
 import time
 
 # Paths
-TRAIN_DATA_PATH = 'results'
-TEST_DATA_PATH = 'archive'
+TRAIN_DATA_PATH = 'train-specs'
+TEST_DATA_PATH = 'test-slices'
 
 # Hyper parameters
 BATCH_SIZE = 32
